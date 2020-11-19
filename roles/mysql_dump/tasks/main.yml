@@ -1,0 +1,10 @@
+---
+# tasks file for mysql_dump
+#
+- name: Dump all databases to hostname.sql
+  mysql_db:
+        state: dump
+        login_user: "{{ mysql_user }}"
+        login_password: "{{ mysql_password }}"
+        name: all
+        target: /tmp/{{ inventory_hostname }}-{{ ansible_date_time.date }}.sql

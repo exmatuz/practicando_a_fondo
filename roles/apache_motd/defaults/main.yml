@@ -1,0 +1,7 @@
+---
+server_admin: usuario@localhost
+web_root: "/var/www/html"
+curso: "Ansible, Automatización"
+instructor: "Fidel valero"
+
+# defaults file for apache_motd

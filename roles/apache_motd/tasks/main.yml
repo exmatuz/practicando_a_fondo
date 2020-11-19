@@ -1,0 +1,33 @@
+---
+
+- name: instalando http
+  yum:
+        name: httpd
+        state: latest
+
+- name: iniciando {{ srv }}
+  service:
+        name: "{{ srv }}"
+        state: started
+        enabled: true
+
+- name: abriendo {{ fw }}
+  firewalld:
+        service: "{{ fw_srv }}"
+        immediate: true
+        permanent: true
+        state: enabled
+  notify: service restart
+
+- name: copiando templates para HTTP
+  template:
+        src: httpd.conf.j2
+        dest: /etc/httpd/conf/httpd.conf
+
+- name: bienvenida SSH
+  template:
+        src: motd.j2
+        dest: /etc/motd
+        
+...
+          

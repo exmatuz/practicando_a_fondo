@@ -1,0 +1,14 @@
+---
+- hosts: servera
+  become: true
+  vars_files:
+        - crypt.yml
+  tasks: 
+        - name: instalar "{{ paquetes }}"
+          yum:
+                name: "{{ item }}"
+                state: latest
+          with_items:
+                - "{{ paquetes }}"
+
+...

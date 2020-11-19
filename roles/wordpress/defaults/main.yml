@@ -1,0 +1,15 @@
+---
+wordpress_install_dir: "/var/www/html"
+wordpress_version: "4.9.14"
+
+mariadb_packages:
+  - mariadb-server
+  - MySQL-python
+  - php-mysql
+
+apache_packages:
+  - httpd
+  - php
+  - wget
+
+mariadb_services: mariadb

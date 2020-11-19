@@ -1,0 +1,39 @@
+## tasks/main.yml
+---
+- name: Install logrotate
+  yum:
+    name: logrotate
+    state: installed
+
+- name: Ensure /etc/logrotate.d
+  file:
+    path: /etc/logrotate.d
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Deploy /etc/logrotate.conf
+  copy:
+    src: logrotate.conf
+    dest: /etc/logrotate.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Deploy /etc/cron.daily/logrotate
+  copy:
+    src: logrotate.sh
+    dest: /etc/cron.daily/logrotate
+    owner: root
+    group: root
+    mode: 0755
+  
+- name: Enforce /etc/logrotate.d/syslog
+  copy:
+    src: syslog
+    dest: /etc/logrotate.d/syslog
+    owner: root
+    group: root
+    mode: 0644
+

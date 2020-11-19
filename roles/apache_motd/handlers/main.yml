@@ -1,0 +1,7 @@
+---
+- name: service restart
+  service:
+        name: httpd
+        state: restart
+
+# handlers file for apache_motd

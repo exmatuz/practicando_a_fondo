@@ -1,0 +1,26 @@
+---
+# tasks file for usuarios
+- name: creando grupos
+  group:
+        name: "{{ item }}"
+        state: present
+  with_items:
+        - groupA
+        - groupB
+
+- name: Creando usuarios de variable grupoA
+  user:
+        name: "{{ item }}"
+        state: present
+        groups: groupA
+  with_items:
+         - "{{ groupA }}"
+
+
+- name: Creando usuarios de variable grupoB
+  user:
+        name: "{{ item }}"
+        state: present
+        groups: groupB
+  with_items:
+          - "{{ groupB }}"

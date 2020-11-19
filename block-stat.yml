@@ -1,0 +1,25 @@
+---
+- hosts: servera
+  become: true
+  tasks:
+    - name: check file
+      stat:
+        path: /root/123.txt
+      register: file
+    
+    - name: debug
+      debug:
+        var: file
+
+    - block:
+        - name: crear nuevo archivo si existe
+          copy:
+            content: "nuevo archivo - cuando si existe\n"
+            dest: /root/321.txt
+          failed_when: file.stat.exists == false
+      rescue:
+        - name: crear nuevo archivo si no existe
+          copy:
+            content: "blabla"
+            dest: /root/321.txt
+...

@@ -1,0 +1,16 @@
+---
+- hosts: servera
+  become: true
+  tasks:
+        - block:
+                - name: crear archivo
+                  shell: touch /root/123.txt
+                
+                - name: crear archivo
+                  shell: touch /root/A123.txt
+
+                - name: crear archivo
+                  shell: touch /root/B123.txt
+                
+                - name: crear archivo
+                  shell: touch /root/C123.txt

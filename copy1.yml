@@ -1,0 +1,19 @@
+---
+- hosts: servera 
+  become: true
+  tasks:
+        - name: copiar este archivo
+          copy:
+                content: "Hola este es el host {{ ansible_hostname }}"
+                dest: /var/www/html/copy1.html
+                owner: apache
+                group: apache
+                mode: 0664
+                backup: yes
+        
+        - name: Modulo lineinfile
+          lineinfile:
+                path: /var/www/html/copy1.html
+                regexp: "Hola este"
+                line: "Hola este es el node {{ ansible_hostname }}"
+...

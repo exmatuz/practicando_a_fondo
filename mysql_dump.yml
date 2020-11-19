@@ -1,0 +1,6 @@
+---
+- hosts: servera
+  become: True
+  roles:
+        - mysql_dump
+...

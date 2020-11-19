@@ -1,0 +1,14 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: crear copia de seguridad
+      shell: tar cfz /tmp/backup1.tar.gz /etc/httpd
+      when: inventory_hostname in groups['backup1']
+      tags: bk1
+
+    - name: crear copia de seguridad
+      shell: tar cfz /tmp/backup2.tar.gz /var/www/html
+      when: inventory_hostname in groups['backup2']
+      tags: bk2
+...

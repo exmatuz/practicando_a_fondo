@@ -1,0 +1,6 @@
+---
+- hosts: servera
+  become: true
+  roles:
+        - apache_motd
+...

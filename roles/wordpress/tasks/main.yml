@@ -1,0 +1,181 @@
+---
+- name: Install Packages
+  yum:
+        name: "{{ item }}"
+        state: present
+  with_items:
+        - "{{ mariadb_packages }}"
+        - "{{ apache_packages }}"
+
+- name: Setup custom log location
+  file:
+        path: "/var/log/mysqld.log"
+        mode: "0644"
+        owner: "mysql"
+        group: "mysql"
+        state: "touch"
+
+- name: Ensure service starts Initially
+  service:
+        name: "{{ mariadb_services }}"
+        state: started
+        enabled: true
+
+- name: Update root password for localhost
+  mysql_user:
+        name: root
+        host: "localhost"
+        password: "{{ mysql_root_password }}"
+        state: present
+        check_implicit_admin: "yes"
+        login_user: "root"
+        login_host: "localhost"
+        login_password: "{{ mysql_root_password }}"
+  when: ansible_hostname != 'localhost'
+
+- name: Update root password for all hosts
+  mysql_user:
+        name: root
+        host: "{{ item }}"
+        password: "{{ mysql_root_password }}"
+        state: present
+        login_user: "root"
+        login_host: "localhost"
+        login_password: "{{ mysql_root_password }}"
+  with_items:
+        - "::1"
+        - "127.0.0.1"
+        - "{{ ansible_fqdn }}"
+        - "{{ ansible_hostname }}"
+  when: ansible_hostname != 'localhost'
+
+- name: Remove anomymous users
+  mysql_user:  
+        name: ""
+        host: "{{ item }}"
+        state: absent
+        login_user: "root"
+        login_password: "{{ mysql_root_password }}"
+  with_items:
+        - "localhost"
+        - "{{ ansible_fqdn }}"
+        - "{{ ansible_hostname }}"
+
+- name: Remove empty root password
+  mysql_user:
+        name: "root"
+        host: ""
+        state: absent
+        login_user: "root"
+        login_password: "{{ mysql_root_password }}"
+
+- name: Remove the test Database
+  mysql_db:
+        name: test
+        state: absent
+        login_user: "root"
+        login_password: "{{ mysql_root_password }}"
+
+- name: Stop service
+  service:
+        name: "{{ mariadb_services }}"
+        state: "stopped"
+
+- name: list ib_logfile remnats
+  shell: ls -l /var/lib/mysql/ib_logfile?
+  register: logfiles
+  changed_when: false
+
+- name: Remove ib_logfiles
+  file:
+        path: "{{ item }}"
+        state: absent
+        force: yes
+  with_items:
+        - "{{ logfiles.stdout_lines }}"
+
+- name: Start Service
+  service:
+        name: "{{ mariadb_services }}"
+        state: started
+        enabled: true
+
+- name: Create MYSQL Databases for Wordpress
+  mysql_db:
+        name: "{{ item }}"
+        state: present
+        login_user: "root"
+        login_password: "{{ mysql_root_password }}"
+  with_items: 
+                - "{{ db_wordpress_name }}"
+
+- name: Create Wordpress User
+  mysql_user:
+        name: "{{ db_wordpress_username }}"
+        password: "{{ db_wordpress_password }}"
+        priv: "{{ item.db }}.*:{{ item.privs }}"
+        append_privs: yes
+        state: present
+        login_user: "root"
+        login_password: "{{ mysql_root_password }}"
+  with_items:
+        - db: "{{ db_wordpress_name }}"
+          privs: "ALL"
+
+- name: Enable Apache in the firewalld
+  firewalld:
+        service: http
+        permanent: true
+        immediate: true
+        state: enabled
+
+- name: Get wordpress
+  get_url:
+        url: http://wordpress.org/wordpress-{{ wordpress_version }}.tar.gz
+        dest: "/tmp/wordpress-{{ wordpress_version }}.tar.gz"
+        validate_certs: false
+
+- name: Wordpress | Extract archive
+  unarchive: 
+        src: "/tmp/wordpress-{{ wordpress_version }}.tar.gz"
+        dest: /tmp/
+        copy: no
+
+
+- name: Wordpress | Move extracted directory to {{ wordpress_install_dir }}
+  shell: "cp -a /tmp/wordpress {{ wordpress_install_dir }}"
+
+- name: Create upload directory
+  file: 
+        path: "{{ wordpress_install_dir }}/wp-content/uploads"
+        state: directory
+
+- name: Remove sample config file
+  file:
+        path: "{{ wordpress_install_dir }}/wp-config-sample.php"
+        state: absent
+
+- name: Fix ownership
+  shell: chown -R apache:apache {{ wordpress_install_dir }}
+
+
+- name: Fetch random salts for wordpress config
+  command: curl http://api.wordpress.org/secret-key/1.1/salt
+  register: wp_salt
+
+- name: Copy wp-config.php
+  template:
+        src: wp-config-sample.php.j2
+        dest: "{{ wordpress_install_dir }}/wp-config.php"
+
+- name: Restore files context
+  shell: "restorecon -R {{ wordpress_install_dir }}"
+
+- name: Start and enable HTTP Service
+  service:
+        name: httpd
+        state: started
+        enabled: true
+     
+
+
